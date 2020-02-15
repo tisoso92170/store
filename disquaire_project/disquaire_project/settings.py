@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+import dj_database_url
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,12 +21,25 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'sc5t2%r&&ck-cpkd73&-c4fg$-+l)838)#d9^r8nhh$p5uvmrs'
+SECRET_KEY = os.environ.get('SECRET_KEY','x"d+t+,cl4;iYc2*~s6MuUJ#]J+24\t`"9u\n/E+0\t:"8\x0bSC<Fs>W/rp{zHH\rk')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if os.environ.get('ENV') == 'PRODUCTION':
+    DEBUG = False
+    # Static files settings
+    db_from_env = dj_database_url.config(conn_max_age=500)
+    DATABASES['default'].update(db_from_env)
 
-ALLOWED_HOSTS = []
+    PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+    STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
+    # Extra places for collectstatic to find static files.
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    STATICFILES_DIRS = (
+        os.path.join(PROJECT_ROOT, 'static'),
+    )
+else:
+    DEBUG = True
+
+ALLOWED_HOSTS = ['127.0.0.1', 'disquaire.herokuapp.com']
 
 
 # Application definition
@@ -50,6 +64,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'disquaire_project.urls'
@@ -84,6 +100,7 @@ DATABASES = {
         'PASSWORD': 'lexington',
         'HOST': 'localhost',   # Or an IP Address that your DB is hosted on
         'PORT': '3306',
+        'ATOMIC_REQUESTS': True,
     }
 }
 
